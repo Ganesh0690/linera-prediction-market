@@ -5,7 +5,7 @@ import { StatsBar } from './components/StatsBar'
 import { MarketCard } from './components/MarketCard'
 import { CreateMarketModal } from './components/CreateMarketModal'
 import { TradeModal } from './components/TradeModal'
-import { Toast, ToastContainer } from './components/Toast'
+import { ToastContainer } from './components/Toast'
 import { useLinera } from './hooks/useLinera'
 import { Market, Position } from './utils/types'
 
@@ -20,7 +20,7 @@ export default function App() {
   const [toasts, setToasts] = useState<{ id: number; message: string; type: 'success' | 'error' }[]>([])
   const [loading, setLoading] = useState(true)
 
-  const { client, connected, walletAddress } = useLinera()
+  const { walletAddress } = useLinera()
 
   const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
     const id = Date.now()
