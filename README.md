@@ -90,13 +90,13 @@ query {
 
 ## Team
 
-- **Name**: [Your Name]
-- **Discord**: [Your Discord]
-- **Wallet**: 0xc38bc5c32d2a57fc3aa0713eece06492923ce743a06723dd9e990b778757ff87
+- **Name**: [Gani]
+- **Discord**: [cryptofav]
+- **Wallet**: 0x87ECEbbE008c66eE0a45b4F2051Fe8e17f9afc1D
 
 ## Changelog
 
-### Wave 5
+### Wave 6
 - Initial submission
 - Smart contract with CreateMarket, PlaceBet, ResolveMarket operations
 - GraphQL service for querying market data
