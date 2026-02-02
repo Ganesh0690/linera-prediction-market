@@ -20,7 +20,7 @@ export default function App() {
   const [toasts, setToasts] = useState<{ id: number; message: string; type: 'success' | 'error' }[]>([])
   const [loading, setLoading] = useState(true)
 
-  const { walletAddress } = useLinera()
+  const { walletAddress, connect, connecting, connected } = useLinera()
 
   const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
     const id = Date.now()
@@ -123,6 +123,16 @@ export default function App() {
     fetchData()
   }, [fetchData])
 
+  useEffect(() => {
+    if (connected) {
+      showToast('🎉 Wallet connected to Linera Testnet!')
+    }
+  }, [connected, showToast])
+
+  const handleConnectWallet = async () => {
+    await connect()
+  }
+
   const handleCreateMarket = async (data: {
     question: string
     description: string
@@ -169,7 +179,7 @@ export default function App() {
       if (!market) return
 
       const shares = amount * 0.95
-      
+
       setMarkets(prev => prev.map(m => {
         if (m.id !== marketId) return m
         const newYesPool = side === 'yes' ? m.yesPool + amount : m.yesPool - shares * 0.5
@@ -202,22 +212,24 @@ export default function App() {
     }
   }
 
-  const filteredMarkets = markets.filter(m => 
+  const filteredMarkets = markets.filter(m =>
     activeTab === 'active' ? m.status === 'Active' : m.status === 'Resolved'
   )
 
   return (
     <div className="app-container">
-      <Header 
-        balance={balance} 
+      <Header
+        balance={balance}
         walletAddress={walletAddress}
         onCreateMarket={() => setShowCreateModal(true)}
+        onConnectWallet={handleConnectWallet}
+        connecting={connecting}
       />
-      
+
       <Hero />
-      
+
       <main className="main-content">
-        <StatsBar 
+        <StatsBar
           totalMarkets={markets.length}
           activeMarkets={markets.filter(m => m.status === 'Active').length}
           totalLiquidity={totalLiquidity}
@@ -227,13 +239,13 @@ export default function App() {
         <div className="section-header">
           <h2 className="section-title">Markets</h2>
           <div className="tabs">
-            <button 
+            <button
               className={`tab ${activeTab === 'active' ? 'active' : ''}`}
               onClick={() => setActiveTab('active')}
             >
               Active
             </button>
-            <button 
+            <button
               className={`tab ${activeTab === 'resolved' ? 'active' : ''}`}
               onClick={() => setActiveTab('resolved')}
             >
@@ -267,7 +279,7 @@ export default function App() {
       </main>
 
       <footer className="footer">
-        Built on <a href="https://linera.io" target="_blank" rel="noopener">Linera</a> — 
+        Built on <a href="https://linera.io" target="_blank" rel="noopener">Linera</a> —
         The next-generation infrastructure for real-time on-chain applications.
       </footer>
 
