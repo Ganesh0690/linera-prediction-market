@@ -1,36 +1,108 @@
-# Linera buildathon submission template
+# 🔮 Linera Prediction Market
 
-This template provides a Docker container with all the necessary
-dependencies to build and run a local Linera application against a
-local network.
+A decentralized prediction market built on Linera blockchain for the Buildathon.
 
-If you want to submit an app running against a local network, please
-use this template.  If you have provided a link to a live demo running
-against the testnet, you do not need to use this template (but it may
-be helpful anyway!).
+## Features
 
-## Structure
+- **Create Markets**: Create prediction markets with yes/no outcomes
+- **Place Bets**: Bet on market outcomes
+- **Resolve Markets**: Resolve markets with final outcomes
+- **GraphQL API**: Query market data via GraphQL
 
-The template provides a `Dockerfile` describing a container with all the
-necessary dependencies for Linera backend and frontend development, as
-well as a simple `compose.yaml` file for Docker Compose that mounts
-the current directory at `/build` and exposes the following ports:
+## Tech Stack
 
-- 5173: the frontend of your application (optional)
-- 8080: the Linera faucet
-- 9001: the localnet validator's proxy
-- 13001: the localnet validator itself
+- **Smart Contract**: Rust + Linera SDK 0.15
+- **API**: GraphQL (async-graphql)
+- **Frontend**: HTML/CSS/JavaScript
+- **Blockchain**: Linera Protocol (Conway Testnet)
 
-Please keep this port structure, and make sure the `Dockerfile` or the
-`compose.yaml` defines a reasonable healthcheck for your app (the
-default waits for your frontend to be served on `localhost:5173`).
-Other internal structure is optional; feel free to change it.
+## Linera SDK Features Used
 
-## Usage
+- `linera-sdk` for contract and service development
+- `async-graphql` for GraphQL service
+- MapView for storing markets
+- Cross-chain messaging support
 
-To get started, fill in `run.bash` with instructions to build and run
-your backend and (if applicable) frontend.
+## Project Structure
+```
+prediction-market/
+├── src/
+│   ├── lib.rs          # ABI definitions
+│   ├── contract.rs     # Smart contract logic
+│   └── service.rs      # GraphQL service
+├── frontend/
+│   └── index.html      # Web UI
+├── Cargo.toml
+├── Dockerfile
+├── compose.yaml
+├── run.bash
+└── README.md
+```
 
-To test that your submission works, run `docker compose up
---force-recreate` and access your application frontend at
-`localhost:5173`.
+## Running Locally (Docker)
+```bash
+docker compose up --force-recreate
+```
+
+Then open http://localhost:5173
+
+## Manual Setup
+
+1. Start local network:
+```bash
+eval "$(linera net helper)"
+linera_spawn linera net up --with-faucet
+```
+
+2. Initialize wallet:
+```bash
+linera wallet init --faucet=http://localhost:8080
+linera wallet request-chain --faucet=http://localhost:8080
+```
+
+3. Build and deploy:
+```bash
+cargo build --release --target wasm32-unknown-unknown
+linera publish-and-create \
+  target/wasm32-unknown-unknown/release/prediction_market_contract.wasm \
+  target/wasm32-unknown-unknown/release/prediction_market_service.wasm
+```
+
+4. Start service:
+```bash
+linera service --port 8081
+```
+
+## GraphQL API
+
+Query market count:
+```graphql
+query {
+  marketCount
+}
+```
+
+## Testnet Deployment
+
+- **Network**: Conway Testnet
+- **Chain ID**: e74ef72d6db958fb1e4ab9513a84ee5d06f51f331a2b90e9c215181b369d989d
+- **App ID**: c4d1219ff690252052161801496c810f29552b4d5250dbe662224b281e0657d6
+
+## Team
+
+- **Name**: [Your Name]
+- **Discord**: [Your Discord]
+- **Wallet**: 0xc38bc5c32d2a57fc3aa0713eece06492923ce743a06723dd9e990b778757ff87
+
+## Changelog
+
+### Wave 5
+- Initial submission
+- Smart contract with CreateMarket, PlaceBet, ResolveMarket operations
+- GraphQL service for querying market data
+- Frontend UI for market interaction
+- Deployed on Conway Testnet
+
+## License
+
+Apache-2.0

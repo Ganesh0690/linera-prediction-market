@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linera Prediction Market</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #fff;
+            padding: 20px;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            background: linear-gradient(90deg, #00d9ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .subtitle { text-align: center; color: #888; margin-bottom: 30px; }
+        .card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .card h2 { color: #00d9ff; margin-bottom: 16px; }
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+        .stat-box {
+            background: rgba(0,217,255,0.1);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-box .number { font-size: 2.5em; font-weight: bold; color: #00ff88; }
+        .stat-box .label { color: #888; margin-top: 5px; }
+        input, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+            margin-bottom: 12px;
+        }
+        button {
+            background: linear-gradient(90deg, #00d9ff, #00ff88);
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        button:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,217,255,0.4); }
+        .market {
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        .market h3 { color: #00ff88; margin-bottom: 8px; }
+        .bet-buttons { margin-top: 12px; display: flex; gap: 10px; }
+        .bet-yes { background: #00ff88; }
+        .bet-no { background: #ff6b6b; }
+        .connection { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; justify-content: center; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; background: #00ff88; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .chain-info { font-size: 0.75em; color: #666; text-align: center; word-break: break-all; margin-bottom: 20px; }
+        #status { padding: 10px; border-radius: 8px; margin-bottom: 20px; text-align: center; }
+        .connected { background: rgba(0,255,136,0.2); }
+        .disconnected { background: rgba(255,107,107,0.2); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔮 Prediction Market</h1>
+        <p class="subtitle">Decentralized predictions on Linera Blockchain</p>
+        
+        <div id="status" class="disconnected">Connecting to Linera...</div>
+        
+        <div class="chain-info" id="chainInfo">Loading chain info...</div>
+
+        <div class="stats">
+            <div class="stat-box">
+                <div class="number" id="marketCount">-</div>
+                <div class="label">Markets</div>
+            </div>
+            <div class="stat-box">
+                <div class="number" id="totalVolume">0</div>
+                <div class="label">Total Volume</div>
+            </div>
+            <div class="stat-box">
+                <div class="number" id="blockHeight">-</div>
+                <div class="label">Block Height</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📊 Create New Market</h2>
+            <input type="text" id="question" placeholder="Will Bitcoin reach $100k by end of 2026?">
+            <textarea id="description" rows="2" placeholder="Market description..."></textarea>
+            <button onclick="createMarket()">Create Market</button>
+        </div>
+
+        <div class="card">
+            <h2>🎯 Active Markets</h2>
+            <div id="marketsList">
+                <div class="market">
+                    <h3>Will Linera mainnet launch in Q1 2026?</h3>
+                    <p style="color:#aaa;font-size:0.9em;">Resolution: Official announcement</p>
+                    <div style="margin-top:10px;display:flex;gap:20px;">
+                        <span style="color:#00ff88;">YES: 65%</span>
+                        <span style="color:#ff6b6b;">NO: 35%</span>
+                    </div>
+                    <div class="bet-buttons">
+                        <button class="bet-yes" onclick="placeBet(0,true)">Bet YES</button>
+                        <button class="bet-no" onclick="placeBet(0,false)">Bet NO</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📡 API Info</h2>
+            <p style="color:#888;">GraphQL Endpoint:</p>
+            <code id="apiEndpoint" style="background:rgba(0,0,0,0.5);padding:10px;border-radius:8px;display:block;color:#00ff88;word-break:break-all;margin-top:10px;">
+                Loading...
+            </code>
+        </div>
+    </div>
+
+    <script>
+        let API_URL = '';
+        
+        async function init() {
+            // Try to get config from environment or use defaults
+            const chainId = window.CHAIN_ID || localStorage.getItem('chainId') || '';
+            const appId = window.APP_ID || localStorage.getItem('appId') || '';
+            
+            if (chainId && appId) {
+                API_URL = `http://localhost:8081/chains/${chainId}/applications/${appId}`;
+                document.getElementById('chainInfo').textContent = `Chain: ${chainId.slice(0,16)}... | App: ${appId.slice(0,16)}...`;
+                document.getElementById('apiEndpoint').textContent = API_URL;
+                fetchData();
+            } else {
+                // Try to discover from service
+                try {
+                    const resp = await fetch('http://localhost:8081');
+                    document.getElementById('status').textContent = 'Service running - configure chain/app IDs';
+                    document.getElementById('status').className = 'connected';
+                } catch(e) {
+                    document.getElementById('status').textContent = 'Waiting for Linera service...';
+                }
+            }
+        }
+
+        async function fetchData() {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: '{ marketCount }' })
+                });
+                const data = await response.json();
+                if (data.data) {
+                    document.getElementById('marketCount').textContent = data.data.marketCount;
+                    document.getElementById('status').textContent = '✅ Connected to Linera';
+                    document.getElementById('status').className = 'connected';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function createMarket() {
+            const question = document.getElementById('question').value;
+            const description = document.getElementById('description').value;
+            if (!question) { alert('Enter a question'); return; }
+            alert(`Creating market: "${question}"\n\nThis would submit a CreateMarket operation to the blockchain.`);
+        }
+
+        function placeBet(marketId, isYes) {
+            alert(`Placing ${isYes ? 'YES' : 'NO'} bet on market ${marketId}\n\nThis would submit a PlaceBet operation.`);
+        }
+
+        init();
+        setInterval(fetchData, 5000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "name": "prediction-market-frontend",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "npx serve -l 5173 ."
+  },
+  "dependencies": {
+    "serve": "^14.2.0"
+  }
+}
