@@ -1,10 +1,24 @@
 {
-  "name": "prediction-market-frontend",
-  "version": "1.0.0",
+  "name": "prediction-market-ui",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "npx serve -l 5173 ."
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
-    "serve": "^14.2.0"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "graphql": "^16.8.0",
+    "graphql-request": "^6.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@vitejs/plugin-react": "^4.2.0",
+    "typescript": "^5.3.0",
+    "vite": "^5.0.0"
   }
 }
